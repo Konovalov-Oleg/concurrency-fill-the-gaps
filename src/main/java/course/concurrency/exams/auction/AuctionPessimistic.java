@@ -13,10 +13,10 @@ public class AuctionPessimistic implements Auction {
     private volatile Bid latestBid = new Bid(0L, 0L, Long.MIN_VALUE);
 
     public boolean propose(Bid bid) {
-        Bid latestValue;
         if (bid.getPrice() <= latestBid.getPrice()) {
             return false;
         }
+        Bid latestValue;
         synchronized (lock) {
             if (bid.getPrice() <= latestBid.getPrice()) {
                 return false;
