@@ -21,18 +21,14 @@ public class RestaurantService {
     }
 
     public void addToStat(String restaurantName) {
-        stat.compute(restaurantName, (k, v) -> v == null ? 1 : ++v);
+        stat.merge(restaurantName, 1, Integer::sum);
     }
 
     public Set<String> printStat() {
         return stat
                 .entrySet()
                 .stream()
-                .map(entry -> new StringBuilder()
-                        .append(entry.getKey())
-                        .append(" - ")
-                        .append(entry.getValue())
-                        .toString())
+                .map(entry -> entry.getKey() + " - " + entry.getValue())
                 .collect(Collectors.toSet());
     }
 }
