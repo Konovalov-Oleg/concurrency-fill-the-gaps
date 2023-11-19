@@ -1,46 +1,41 @@
 package course.concurrency.m3_shared.immutable;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class OrderService {
 
-    private Map<Long, Order> currentOrders = new HashMap<>();
-    private long nextId = 0L;
+    private final Map<Long, Order> currentOrders = new ConcurrentHashMap<>();
 
-    private synchronized long nextId() {
-        return nextId++;
-    }
+    private final AtomicLong nextId = new AtomicLong();
 
-    public synchronized long createOrder(List<Item> items) {
-        long id = nextId();
-        Order order = new Order(items);
-        order.setId(id);
-        currentOrders.put(id, order);
+    public long createOrder(List<Item> items) {
+        long id = nextId.incrementAndGet();
+        currentOrders.put(id, new Order(id, items));
         return id;
     }
 
-    public synchronized void updatePaymentInfo(long orderId, PaymentInfo paymentInfo) {
-        currentOrders.get(orderId).setPaymentInfo(paymentInfo);
-        if (currentOrders.get(orderId).checkStatus()) {
-            deliver(currentOrders.get(orderId));
+    public void updatePaymentInfo(long orderId, PaymentInfo paymentInfo) {
+        Order order = currentOrders.computeIfPresent(orderId, (k, v) -> v.updatedPaymentInfo(paymentInfo));
+        if (order != null && order.checkStatus()) {
+            deliver(order);
         }
     }
 
-    public synchronized void setPacked(long orderId) {
-        currentOrders.get(orderId).setPacked(true);
-        if (currentOrders.get(orderId).checkStatus()) {
-            deliver(currentOrders.get(orderId));
+    public void setPacked(long orderId) {
+        Order order = currentOrders.computeIfPresent(orderId, (k, v) -> v.updatedPacked(true));
+        if (order != null && order.checkStatus()) {
+            deliver(order);
         }
     }
 
-    private synchronized void deliver(Order order) {
-        /* ... */
-        currentOrders.get(order.getId()).setStatus(Order.Status.DELIVERED);
+    private void deliver(Order order) {
+        currentOrders.computeIfPresent(order.getId(), (k, v) -> v.updatedStatus(Order.Status.DELIVERED));
     }
 
-    public synchronized boolean isDelivered(long orderId) {
+    public boolean isDelivered(long orderId) {
         return currentOrders.get(orderId).getStatus().equals(Order.Status.DELIVERED);
     }
 }
