@@ -55,15 +55,15 @@ public class Order {
         return status;
     }
 
-    public Order updatedPaymentInfo(PaymentInfo paymentInfo) {
+    public Order withPaymentInfo(PaymentInfo paymentInfo) {
         return new Order(this.getId(), this.getItems(), paymentInfo, this.isPacked(), this.getStatus());
     }
 
-    public Order updatedPacked(boolean isPacked) {
+    public Order withPacked(boolean isPacked) {
         return new Order(this.getId(), this.getItems(), this.getPaymentInfo(), isPacked, this.getStatus());
     }
 
-    public Order updatedStatus(Status status) {
+    public Order withStatus(Status status) {
         return new Order(this.getId(), this.getItems(), this.getPaymentInfo(), this.isPacked(), status);
     }
 }
